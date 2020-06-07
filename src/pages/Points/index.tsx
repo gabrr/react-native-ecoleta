@@ -1,14 +1,38 @@
-import React from 'react'
-import { StyleSheet, Text, View, Image, ScrollView } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { StyleSheet, Text, View, Image, ScrollView, Alert } from 'react-native'
 import Constants from 'expo-constants'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import {  Feather as Icon } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import MapView, { Marker } from 'react-native-maps'
 import { SvgUri } from 'react-native-svg'
+import api from '../../services/api'
+import  * as Location from "expo-location";
+
+interface Item {
+  id: number,
+  title: string,
+  imageUrl: string
+}
+
+interface Points {
+  id: number,
+  name: string,
+  image: string,
+  latitude: number,
+  longitude: number
+}
+
+
 
 const Points = () => {
     const navigation = useNavigation()
+
+    const [items, setItems] = useState<Item[]>([])
+    const [selectedItems, setselectedItems] = useState<number[]>([])
+    const [initialPostion, setinitialPostion] = useState<[number, number]>([0, 0])
+    const [points, setpoints] = useState<Points[]>([])
+
 
     const handleNavigateBack = () => {
         navigation.goBack()
@@ -17,6 +41,49 @@ const Points = () => {
     const handleNavigateToDetails = () => {
         navigation.navigate('Details')
     }
+
+    useEffect(() => {
+      api.get('items')
+        .then(({data}) => setItems(data))
+    }, [])
+
+    useEffect(() => {
+      const getPosition = async() => {
+        const { status } = await Location.requestPermissionsAsync()
+
+        if(status !== 'granted') {
+            Alert.alert('Opps', 'Opps we need your location')
+            return;
+        }
+
+        const location = await Location.getCurrentPositionAsync()
+
+        const { latitude, longitude } = location.coords
+
+        setinitialPostion([latitude, longitude])
+      }
+      getPosition()
+    }, [])
+
+    useEffect(() => {
+      api.get('points', {
+        params: {
+          city: 'Guarulhos',
+          uf: 'SP',
+          items: [1, 2, 3, 4, 5, 6]
+        }
+      }).then(res => {setpoints(res.data)})
+    }, [])
+
+    const handleSelectedItem = (id: number) => {
+      if(selectedItems.indexOf(id) >= 0) {
+          const items = selectedItems.filter(itemId => itemId !== id )
+          return setselectedItems(items)
+      }
+      setselectedItems([...selectedItems, id]) 
+    }
+
+
 
     return (
         <>
@@ -28,28 +95,35 @@ const Points = () => {
                 <Text style={styles.description} >Find a Collector Place</Text>
 
                 <View style={styles.mapContainer}>
-                    <MapView 
-                        style={styles.map} 
-                        initialRegion={{
-                            latitude: -23.4225664,
-                            longitude: -46.53056,
-                            latitudeDelta: 0.014,
-                            longitudeDelta: 0.014
-                        }}
-                    >
-                        <Marker 
-                            style={styles.mapMarker}
-                            onPress={handleNavigateToDetails}
-                            coordinate={{
-                            latitude: -23.4225664,
-                            longitude: -46.53056
-                        }}>
-                            <View style={styles.mapMarkerContainer}>
-                                <Image style={styles.mapMarkerImage} source={{ uri: 'https://images.unsplash.com/photo-1542838132-92c53300491e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60' }}/>
-                                <Text style={styles.mapMarkerTitle}>Market</Text>
-                            </View>
-                        </Marker>
-                    </MapView>
+                    {initialPostion[0] !== 0 && (
+                      <MapView 
+                          style={styles.map} 
+                          initialRegion={{
+                              latitude: -23.4225664,
+                              longitude: -46.53056,
+                              latitudeDelta: 0.014,
+                              longitudeDelta: 0.014
+                          }}
+                      >
+                        {
+                          points.map(point => (
+                            <Marker 
+                                key={String(point.id)}
+                                style={styles.mapMarker}
+                                onPress={handleNavigateToDetails}
+                                coordinate={{
+                                latitude: point.latitude,
+                                longitude: point.longitude
+                            }}>
+                                <View style={styles.mapMarkerContainer}>
+                                    <Image style={styles.mapMarkerImage} source={{ uri: point.image}}/>
+                                    <Text style={styles.mapMarkerTitle}>{point.name}</Text>
+                                </View>
+                            </Marker>
+                          ))
+                        }
+                      </MapView>
+                    )}
                 </View>
             </View>
             <View style={styles.itemsContainer}>
@@ -58,30 +132,22 @@ const Points = () => {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{paddingHorizontal: 20}}
                 >
-                    <TouchableOpacity style={styles.item} onPress={() => {}} >
-                        <SvgUri width={40} height={40} uri={'http://192.168.15.5:5000/uploads/eletronicos.svg'}/>
-                        <Text style={styles.itemTitle}>Eletronics</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.item} onPress={() => {}} >
-                        <SvgUri width={40} height={40} uri={'http://192.168.15.5:5000/uploads/eletronicos.svg'}/>
-                        <Text style={styles.itemTitle}>Eletronics</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.item} onPress={() => {}} >
-                        <SvgUri width={40} height={40} uri={'http://192.168.15.5:5000/uploads/eletronicos.svg'}/>
-                        <Text style={styles.itemTitle}>Eletronics</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.item} onPress={() => {}} >
-                        <SvgUri width={40} height={40} uri={'http://192.168.15.5:5000/uploads/eletronicos.svg'}/>
-                        <Text style={styles.itemTitle}>Eletronics</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.item} onPress={() => {}} >
-                        <SvgUri width={40} height={40} uri={'http://192.168.15.5:5000/uploads/eletronicos.svg'}/>
-                        <Text style={styles.itemTitle}>Eletronics</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.item} onPress={() => {}} >
-                        <SvgUri width={40} height={40} uri={'http://192.168.15.5:5000/uploads/eletronicos.svg'}/>
-                        <Text style={styles.itemTitle}>Eletronics</Text>
-                    </TouchableOpacity>
+                  {
+                    items.map(item => (
+                      <TouchableOpacity  
+                        key={String(item.id)} 
+                        style={[
+                          styles.item,
+                          selectedItems.includes(item.id) ? styles.selectedItem : {}
+                        ]} 
+                        onPress={() => handleSelectedItem(item.id)} 
+                        activeOpacity={0.6}
+                      >
+                          <SvgUri width={40} height={40} uri={item.imageUrl}/>
+                          <Text style={styles.itemTitle}>{item.title}</Text>
+                      </TouchableOpacity>
+                    ))
+                  }
                 </ScrollView>
             </View>
         </>
@@ -188,3 +254,10 @@ const styles = StyleSheet.create({
     },
   });
 
+// interface Points {
+//   id: number,
+//   longitute: number,
+//   items: {
+//     title: string
+//   }[]
+// }

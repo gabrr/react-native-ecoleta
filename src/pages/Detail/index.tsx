@@ -1,16 +1,19 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import {  Feather as Icon, FontAwesome } from '@expo/vector-icons'
 import { RectButton } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const Details = () => {
-    const navigation = useNavigation()
 
+const Details = () => {
+
+    const navigation = useNavigation()
     const handleNavigateBack = () => {
         navigation.goBack()
     }
+
+    
 
     return (
         <SafeAreaView style={{flex: 1}}>
