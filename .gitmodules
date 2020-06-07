@@ -1,0 +1,3 @@
+[submodule "ecoleta-fullstack-app"]
+	path = ecoleta-fullstack-app
+	url = https://github.com/gabrr/ecoleta-fullstack-app.git
