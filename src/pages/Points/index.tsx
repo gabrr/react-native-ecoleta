@@ -38,8 +38,8 @@ const Points = () => {
         navigation.goBack()
     }
 
-    const handleNavigateToDetails = () => {
-        navigation.navigate('Details')
+    const handleNavigateToDetails = (pointId: number) => {
+        navigation.navigate('Details', {pointId})
     }
 
     useEffect(() => {
@@ -110,7 +110,7 @@ const Points = () => {
                             <Marker 
                                 key={String(point.id)}
                                 style={styles.mapMarker}
-                                onPress={handleNavigateToDetails}
+                                onPress={() => handleNavigateToDetails(point.id)}
                                 coordinate={{
                                 latitude: point.latitude,
                                 longitude: point.longitude
